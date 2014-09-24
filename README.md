@@ -1,4 +1,5 @@
-zeno_arms_tool_spydr
+Tool for Zeno's arms, Spydrouge's Implementation
 ====================
+Author: Melissa Kronenberger (Spydrouge)
 
-I need to practice programming something
+Instructions: See the Wiki.

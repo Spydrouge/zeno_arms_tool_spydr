@@ -1,0 +1,32 @@
+# Pololu based motors
+
+
+
+arm_RSR:
+  pololu_id: xx
+  motor_id: xx
+  init: xxx
+  min: xxx
+  max: xxx
+  reverse: true
+  calibration:
+    min_pulse: xxx
+    min_angle: -45
+    max_pulse: 2000
+    max_angle: 45
+
+neck_pitch_joint:
+  pololu_id: 12
+  motor_id: 0
+  init: 1500
+  min: 1000
+  max: 2000
+  reverse: true
+  calibration:
+    min_pulse: 1000
+    min_angle: -50
+    max_pulse: 2000
+    max_angle: 50
+
+
+
