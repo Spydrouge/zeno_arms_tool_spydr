@@ -2,6 +2,10 @@
 import rospy
 import actionlib
 
+# NEED TO DO: I want to make sure that this random, which is used to make the wave a little 'sloppy' and unpredictable
+# so it seems less robotic, is permissable
+import random
+
 from ros_pololu_servo.msg import *
 from trajectory_msgs.msg import JointTrajectoryPoint
 
@@ -153,7 +157,7 @@ class zenoArms:
         traj = JointTrajectory()
 
         #really quickly add all of the motor names
-        for i in range (0, len(self.names)):
+        for i in range(0, len(self.names)):
             traj.joint_names.append(self.names[i])
 
 
@@ -187,44 +191,55 @@ class zenoArms:
         # and now of course call the function
         self.new_points(traj, arm_poses, time_when)
 
-        # RAISE LEFT ARM
-        # The only motors moving should be the shoulder wheel, the elbow, the wrist, the hand, and the waist
-        # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
-        # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
-        #-------------------------------
-        arm_poses = [same, same, same, same, same,
-                     1.0, same, same, 1.0, -1.0, same,
-                     -1.0]
+        #here we decide whether to wave 2 to 4 times
+        sloppy_wave_count = random.randrange(0, 2) + 2
+        for j in range(0, sloppy_wave_count):
+
+            #this should make the wave a little uneven and humanish
+            sloppy_values = []
+            for k in range(0, 4):
+                sloppy_values.append(random.uniform(0.0, 0.1) - 0.05)
+
+            # RAISE LEFT ARM
+            # The only motors moving should be the shoulder wheel, the elbow, the wrist, the hand, and the waist
+            # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
+            # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
+            #-------------------------------
+            arm_poses = [same, same, same, same, same,
+                         1.0, 1.0, same, 1.0, -1.0, same,
+                         -0.25]
+
+            time_when += 0.5 + sloppy_values[0]
+
+            self.new_points(traj, arm_poses, time_when)
+
+            # EXTEND ARM THROUGH WAVE
+            # Zeno waves by unclenching his shoulder hinge (min) and rotating his wrist to try and keep the hand
+            # facing forward
+
+            #helper variable for a sloppily extended shoulder hinge (s_piv) and wrist rotation (s_wri) and elbow
+            #hinge (s_elb)
+            s_piv = sloppy_values[2] - 0.8
+            s_wri = sloppy_values[2] - 0.75
+            s_elb = sloppy_values[3] * 2 - 0.5
+
+
+            arm_poses = [same, same, same, same, same,
+                         same, s_piv , same, s_elb, same, same,
+                         s_wri]
+
+            time_when += 0.5 + sloppy_values[1]
+
+            self.new_points(traj, arm_poses, time_when)
+
+        # ASSUME NEUTRAL POSE (This will draw the arm back from the extended pose, not the retracted pose)
+        arm_poses = [0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
+                     0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
+                     0.0]
 
         time_when += 0.75
 
         self.new_points(traj, arm_poses, time_when)
-
-        #
-
-
-
-
-
-    for n in range (1,4):
-
-
-        pts=JointTrajectoryPoint()
-        pts.time_from_start=rospy.Duration(0.5)
-        )
-        0.77)
-        pts.velocities.append(1.0)
-        pts.velocities.append(1.0)
-        traj.points.append(pts)
-        pts=JointTrajectoryPoint()
-        pts.time_from_start=rospy.Duration(1.0)
-        0.77)
-        -0.77)
-        pts.velocities.append(1.0)
-        pts.velocities.append(1.0)
-        traj.points.append(pts)
-        pub.publish(traj)
-        rospy.sleep(3.0)
 
 
 
