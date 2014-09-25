@@ -8,7 +8,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 class zenoArms:
 
-     # NOTE FROM MELISSA ON IMPLEMENTATION
+    # NOTE ON IMPLEMENTATION
     # -------------------------------------
     # I use 'position' values are mapped from [-1.0, 1.0] values inclusive. These assume that there exists a function
     # that will use more specific measurements to actually call position.append
@@ -20,13 +20,16 @@ class zenoArms:
     # will take this into account and use a -1.0 directional value in order to swap directions, if necessary.
     #
     # This is being done because we do not yet have real config files.
+
+    # NOTE ON JOINT ORIENTATION
     #
-    # I have used '1.0' on joints to mean they are twisted upward for the shoulders and outward for the lengths of the
-    # arms in the sense that the elbows would turn in and their wrists would face up. '-1.0' should mean the shoulders
-    # are twisted down/back, and the length of the arms are twisted inward in the sense that a human's elbows would
-    # turn out and we'd see the backs of their hands. '1.0' on pitch joints means fully 'clenched', and '-1.0' means
-    # fully 'extended' As such, I have nearly ensured that one motor on each side will have to be flipped; mirroring
-    # the properly oriented motor.
+    # Assumptions:
+    #       Hinge (Pitch) Joints are max at fully clenched and min at fully extended
+    #       Wheel (Rotation) Joints are max when:
+    #           - For the Shoulders: When the arms are lifted above the head
+    #           - For the Elbows: Assume the arms are slack. max will rotate the hard tip of the elbow inward.
+    #           - For the Wrists: Same orientation as the elbows. Palms will turn out/up.
+
     #--------------------------------------
 
 
@@ -73,19 +76,21 @@ class zenoArms:
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 0.0]
 
-    #a constant: assess, do I want to use the storedPosition for this motor?
+    #a constant: assess, do I want to use the storedPosition for this motor? If so, I will pass in storeConst instead of a
+    #[-1.0, 1.0] value.
     storeConst = 12.0
 
 
+    # initialize many of the values we may require in order to correctly transform [-1.0, 1.0] range values
+    # into the proper radian ranges, and to compute velocities as well
 
     def __init__(self):
-        # NEED TO DO: may be proper location to do min/maxRad computations
 
-        #helper
-        motor_total = len(self.names)
+       #iterate through all of the motors
+        for i in range(0, len(self.names)):
 
-        for i in range(0, motor_total):
-            #compute something?
+            #NEED TO DO: Any additional initializations using proper config files, motor numbers, etc?
+
             print("minRad: " + self.minRads[i])
             print("maxRad: " + self.maxRads[i])
 
@@ -96,87 +101,90 @@ class zenoArms:
             #calculate the 'range' which I will later use
             self.rangeRads[i] = (self.maxRads[i] + self.minRads[i]) / 2.0
 
-
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
-    def mapMotors(self, pts, positions):
+    def map_motors(self, pts, positions):
 
         # iterate through all of the motors
-        for i in range (0, len(self.positions)):
+        for i in range(0, len(positions)):
 
             # see if the position is carrying storeConst, which means to use whatever position was stored
             # for the motor last.
-
             if positions[i] == self.storeConst:
                 pts.positions.append(self.storePos[i])
 
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
-            # range, and offset it.
+            # range, and offset it by the correct amount
             else:
                 pts.positions.append(self.rangeRads * positions[i] * self.adjustDir[i] + self.offsetRads[i])
 
+                # do not update the storePos array UNLESS we actually have a pos (heavens forbid we throw in a value
+                # like "12.0"...
+                self.storePos[i] = positions[i]
 
-    def defineWave(self):
+            #NEED TO DO: This is a placeholder; actual velocities should be computed later
+            pts.velocities.append(1.0)
+
+    def new_points(self, traj, positions, begin_point):
+        # initialize the point
+        pts = JointTrajectoryPoint()
+
+        #Adjust as necessary. A little delay should keep strange abrupt jerks from occurring
+        pts.time_from_start = rospy.Duration(begin_point)
+
+        # map_motors will do all our transformations from the [-1.0, 1.0] system to what the motors actually need,
+        # and append position values to pts
+        self.map_motors(pts, positions)
+
+        # we are appending the points to the overall trajectory variable right now. Later, an array will go back
+        # and give the points proper velocities.
+        traj.points.append(pts)
+
+    def define_wave(self):
 
         #initialize the joint trajectory
         traj = JointTrajectory()
 
-        #really quickly add all of the names
-        for i in range (0, 13):
-            traj.joint_names.append(names[i])
+        #really quickly add all of the motor names
+        for i in range (0, len(self.names)):
+            traj.joint_names.append(self.names[i])
 
         # NEUTRAL POSE
-        # Zeno should assume a neutral pose, which should not be too abrupt. This posture should have the arms dropped
-        # at the side and should be adjusted. The hands may also be imperfect, because 0.0 does not point outward.
-        # dropped at his side, Zeno's hand will be at 0.5 or farther (twisted 'outward'
+        # ----------------------
+        # Zeno should 'gently' assume a neutral position to wave from. This posture should have the arms dropped
+        # at the side with the hands pointed towards the thigh.
 
         # Problems are likely to be found in the Shoulder Roll Joints (arm_RSR and arm_LSR) which ought to be at
-        # something like 0.5 or -0.5, but which may need fine tuning.
-
-        # initialize the point
-        pts = JointTrajectoryPoint()
-        beginPoint = 0.5;
-        pts.time_from_start = rospy.Duration(beginPoint)
-
-        arm_map(pts, 0.5, arm_RSR)  #the shoulder roll points the arm down
-        arm_map(pts, 1.0, arm_RSP)  #the shoulder hinge is tightly clenched
-        arm_map(pts, 0.0, arm_RER)  #the elbow is rolled so the hinge(pitch joint) faces forward
-        arm_map(-1.0, arm_REP)     #the elbow hinge is fully extended
-        arm_map(pts,0.5, arm_RHR)  #the hand rolls to face the leg
-        arm_map(pts,0.0, arm_RHP)  #the fingers are partially closed.
-
-        arm_map(pts,0.5, arm_LSR)  #the shoulder roll points the arm down
-        arm_map(pts,1.0, arm_LSP)  #the shoulder hinge is tightly clenched
-        arm_map(pts,0.0, arm_LER)  #the elbow is rolled so the hinge(pitch joint) faces forward
-        arm_map(pts,-1.0, arm_LEP) #the elbow hinge is fully extended
-        arm_map(pts,0.5, arm_LHR) #the hand rolls to face the leg
-        arm_map(pts,0.0, arm_LHP) #the fingers are partially closed.
-
-        waist_map(0.0)) #the waist should be neutral
-
-        #velocities should be fine-tuned later. As of yet I am not sure how they match up
-        for i in range (0, 13):
-            pts.velocities.append(arm_map_vel_from_time(, traj.joint_names.append(names[i]))
+        # something like 0.5 or -0.5, and the hands, which do not appear to be attached so that 0.0 really lines
+        # up with anything...
 
 
-        #LIFT HAND and TWIST so that the shoulder of the lifted hand faces forward!
-         # initialize the point
-        pts = JointTrajectoryPoint()
-        beginPoint += 1.0
-        pts.time_from_start = rospy.Duration(beginPoint)
+        # This helper variable should be easy to edit. It lists the motor positions, [-1.0, 1.0] and exists to
+        # conveniently pass them into map_motors for each new position. arm_poses will pass in storeConst from now on
+        # if it wants to use the last position array.
+        arm_poses = [0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
+                     0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
+                     0.0]
 
-        arm_map(pts,0.5, arm_RSR)
-        arm_map(pts,1.0, arm_RSP)
-        arm_map(pts,0.0, arm_RER)
-        arm_map(pts,-1.0, arm_REP)
-        arm_map(pts,0.5, arm_RHR)
-        arm_map(pts,0.0, arm_RHP)
+        #this variable will help us keep track of how much time has elapsed, so we don't accidentlaly put one trajectory
+        #behind another
+        time_when = 0.5
 
-        arm_map(pts,0.5, arm_LSR)
-        arm_map(pts,1.0, arm_LSP)
-        arm_map(pts,0.0, arm_LER)
-        arm_map(pts,-1.0, arm_LEP)
-        arm_map(pts,0.5, arm_LHR)
-        arm_map(pts,0.0, arm_LHP)
+        #another lovely helping variable that allows us to pass in the storeConst with the word 'same' when we want
+        #positions to stay the same
+        same = self.storeConst
+
+        # and now of course call the function
+        self.new_points(traj, arm_poses, time_when)
+
+        # RAISE LEFT ARM
+        # The only motors moving should be the shoulder wheel, the elbow, the wrist, the hand, and the waist
+        # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
+        # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left
+        #-------------------------------
+        arm_poses = [same, same, same, same, same,
+                     1.0, same, same, 1.0, -1.0, same
+                        ]
+
 
 
 
