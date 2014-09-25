@@ -138,7 +138,7 @@ class ZenoArms:
 
             #calculate the offset (if for some strange reason abs(maxrads) and abs(minRads) are not equal,
             ## I want to account for it
-            self.offsetRads[i] = self.minRads[i]
+            self.offsetRads[i] = self.maxRads[i] - self.minRads[i]
 
             #calculate the 'range' which I will later use
             self.rangeRads[i] = (self.maxRads[i] + self.minRads[i]) / 2.0
