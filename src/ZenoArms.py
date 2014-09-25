@@ -7,6 +7,7 @@ import actionlib
 import random
 
 from ros_pololu_servo.msg import *
+from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
@@ -117,6 +118,9 @@ class ZenoArms:
 
     def __init__(self):
 
+        #initialize ros node
+        rospy.init_node('ZenoArms')
+
        #iterate through all of the motors
         for i in range(0, len(self.names)):
 
@@ -139,6 +143,23 @@ class ZenoArms:
 
         #call definition functions
         self.define_wave()
+
+       #more ros setup
+        self.client = actionlib.SimpleActionClient('pololu_trajectory_action_server', pololu_trajectoryAction)
+        self.client.wait_for_server()
+
+        #subscribe to listen on the topic of when zeno needs animations for his arms
+        rospy.Subscriber("zeno_popolu_animation", String, self.callback)
+
+    def callback(self, msg):
+        print ("ZenoArms.callback ran")
+        if msg.data in self.trajAnims:
+            print(" and found trajAnims correctly.")
+            goal = pololu_trajectoryGoal()
+            goal.joint_trajectory = self.trajAnims[msg.data]
+            self.client.send_goal(goal)
+            self.client.wait_for_result()
+
 
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
@@ -269,11 +290,10 @@ class ZenoArms:
         self.new_points(traj, arm_poses, time_when)
 
         # And now that we are done, add it to our animations
-        self.trajAnims['zeno_wave'] = traj)
+        self.trajAnims['zeno_wave'] = traj
 
 
 
 if __name__ == '__main__':
-    rospy.init_node('ZenoArms')
-    client = actionlib.SimpleActionClient('pololu_trajectory_action_server', pololu_trajectoryAction)
-    client.wait_for_server()
+    arms=ZenoArms()
+    rospy.spin()
