@@ -136,6 +136,10 @@ class ZenoArms:
             #this should allow us to cast [-1.0, 1.0] values to pulses more easily
             self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
 
+
+        #call definition functions
+        self.define_wave()
+
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
 
