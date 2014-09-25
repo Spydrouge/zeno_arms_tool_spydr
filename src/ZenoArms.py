@@ -51,19 +51,24 @@ class ZenoArms:
 
     #NEED TO BE HAND-SET
     #---------------------
-    #the names I will be using for the motors
-    names = ['arm_RSR', 'arm_RSP', 'arm_RER', 'arm_REP', 'arm_RHR', 'arm_RHP',
-             'arm_LSR', 'arm_LSP', 'arm_LER', 'arm_LEP', 'arm_LHR', 'arm_LHP',
-             'waist_R']
+    #the names I will be using for the motors, pre-config file delivery
+    #names = ['arm_RSR', 'arm_RSP', 'arm_RER', 'arm_REP', 'arm_RHR', 'arm_RHP',
+    #         'arm_LSR', 'arm_LSP', 'arm_LER', 'arm_LEP', 'arm_LHR', 'arm_LHP',
+    #         'waist_R']
+
+    #the names I am now using, relative to the config file I was given
+    names = ['r_shoulder_roll_joint', 'r_shoulder_pitch_joint', 'r_elbow_roll_joint', 'r_elbow_pitch_joint', 'r_wrist_roll_joint', 'r_hand_grasp',
+             'l_shoulder_roll_joint', 'l_shoulder_pitch_joint', 'l_elbow_roll_joint', 'l_elbow_pitch_joint', 'l_wrist_roll_joint', 'l_hand_grasp',
+             'torso_joint']
 
     # Entered correct radian bounds for each of the above-listed motors
-    minRads = [-0.8727, -0.6545, -0.7854, -0.523, -0.7854, -0.2618,
-               -0.8727, -0.6545, -0.7854, -0.523, -0.7854, -0.2618,
-               -0.8727]
+    minRads = [-0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
+               -0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
+               -0.872]
 
-    maxRads = [0.8727, 0.6545, 0.7854, 0.523, 0.7854, 0.2618,
-               0.8727, 0.6545, 0.7854, 0.523, 0.7854, 0.2618,
-               0.8727]
+    maxRads = [0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
+               0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
+               0.872]
 
     # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
@@ -71,17 +76,18 @@ class ZenoArms:
                  1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
                  1.0]
 
-    motorIds = [6, 0, 1, 2, 3, 4,
-                13, 12, 14, 15, 16, 17,
-                8]
-
-    minPulses = [992, 992, 996.75, 1398, 992, 992,
-                 992, 992, 992, 1136, 996, 992,
-                 1016.25]
-
-    maxPulses = [1990, 1745.5, 2000, 1931.25, 2000, 1706.25,
-                 1600, 2000, 2000, 1792, 2000, 1701.5,
-                 1907]
+    #These are in the config file and we currently do not need them
+    # motorIds = [6, 0, 1, 2, 3, 4,
+    #             13, 12, 14, 15, 16, 17,
+    #             8]
+    #
+    # minPulses = [992, 992, 996.75, 1398, 992, 992,
+    #              992, 992, 992, 1136, 996, 992,
+    #              1016.25]
+    #
+    # maxPulses = [1990, 1745.5, 2000, 1931.25, 2000, 1706.25,
+    #              1600, 2000, 2000, 1792, 2000, 1701.5,
+    #              1907]
 
 
     # COMPUTED WHILE RUNNING
@@ -170,7 +176,7 @@ class ZenoArms:
             # see if the position is carrying storeConst, which means to use whatever position was stored
             # for the motor last. (the "-" & "<" are used instead of == because these are floats and shouldn't
             # be compared directly)
-            if positions[i] - self.storeConst < 0.01:
+            if (positions[i] - self.storeConst < 0.01) and (self.storeConst - positions[i] < 0.01):
                 pts.positions.append(self.storePos[i])
 
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
