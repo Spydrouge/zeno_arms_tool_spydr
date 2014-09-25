@@ -8,6 +8,7 @@ import random
 
 from ros_pololu_servo.msg import *
 from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
@@ -132,8 +133,8 @@ class ZenoArms:
 
             #NEED TO DO: Any additional initializations using proper config files, motor numbers, etc?
 
-            print("minRad: " + self.minRads[i])
-            print("maxRad: " + self.maxRads[i])
+            print("minRad: " + str(self.minRads[i]))
+            print("maxRad: " + str(self.maxRads[i]))
 
             #calculate the offset (if for some strange reason abs(maxrads) and abs(minRads) are not equal,
             ## I want to account for it
@@ -144,7 +145,7 @@ class ZenoArms:
 
             #calculate the range for the pulses as well, in case we need them.
             #this should allow us to cast [-1.0, 1.0] values to pulses more easily
-            self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
+            #self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
 
 
         #call definition functions
@@ -182,14 +183,14 @@ class ZenoArms:
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
             # range, and offset it by the correct amount
             else:
-                pts.positions.append(self.rangeRads * positions[i] * self.adjustDir[i] + self.offsetRads[i])
+                pts.positions.append(self.rangeRads[i] * positions[i] * self.adjustDir[i] + self.offsetRads[i])
 
                 # do not update the storePos array UNLESS we actually have a pos (heavens forbid we throw in a value
                 # like "12.0"...
                 self.storePos[i] = positions[i]
 
             #NEED TO DO: This is a placeholder; actual velocities should be computed later
-            pts.velocities.append(1.0)
+            pts.velocities.append(0.5)
 
     def new_points(self, traj, positions, begin_point):
         # initialize the point
@@ -264,7 +265,7 @@ class ZenoArms:
                          1.0, 1.0, same, 1.0, -0.75, -1.0,
                          -0.25]
 
-            time_when += 0.5 + sloppy_values[0]
+            time_when += 1.5 + sloppy_values[0]
 
             self.new_points(traj, arm_poses, time_when)
 
@@ -282,7 +283,7 @@ class ZenoArms:
                          same, s_piv , same, s_elb, s_wri, same,
                          -s_wri]
 
-            time_when += 0.5 + sloppy_values[1]
+            time_when += 1.5 + sloppy_values[1]
 
             self.new_points(traj, arm_poses, time_when)
 
@@ -291,7 +292,7 @@ class ZenoArms:
                      0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
                      0.0]
 
-        time_when += 0.75
+        time_when += 1.5
 
         self.new_points(traj, arm_poses, time_when)
 
