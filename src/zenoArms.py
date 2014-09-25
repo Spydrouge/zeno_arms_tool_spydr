@@ -120,8 +120,9 @@ class zenoArms:
         for i in range(0, len(positions)):
 
             # see if the position is carrying storeConst, which means to use whatever position was stored
-            # for the motor last.
-            if positions[i] == self.storeConst:
+            # for the motor last. (the "-" & "<" are used instead of == because these are floats and shouldn't
+            # be compared directly)
+            if positions[i] - self.storeConst < 0.01:
                 pts.positions.append(self.storePos[i])
 
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
@@ -206,7 +207,7 @@ class zenoArms:
             # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
             #-------------------------------
             arm_poses = [same, same, same, same, same,
-                         1.0, 1.0, same, 1.0, -1.0, same,
+                         1.0, 1.0, same, 1.0, -0.75, -1.0,
                          -0.25]
 
             time_when += 0.5 + sloppy_values[0]
@@ -220,13 +221,12 @@ class zenoArms:
             #helper variable for a sloppily extended shoulder hinge (s_piv) and wrist rotation (s_wri) and elbow
             #hinge (s_elb)
             s_piv = sloppy_values[2] - 0.8
-            s_wri = sloppy_values[2] - 0.75
+            s_wri = sloppy_values[2] - 0.25
             s_elb = sloppy_values[3] * 2 - 0.5
 
-
             arm_poses = [same, same, same, same, same,
-                         same, s_piv , same, s_elb, same, same,
-                         s_wri]
+                         same, s_piv , same, s_elb, s_wri, same,
+                         -s_wri]
 
             time_when += 0.5 + sloppy_values[1]
 
