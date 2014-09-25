@@ -70,6 +70,17 @@ class ZenoArms:
                  1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
                  1.0]
 
+    motorIds = [6, 0, 1, 2, 3, 4,
+                13, 12, 14, 15, 16, 17,
+                8]
+
+    minPulses = [992, 992, 996.75, 1398, 992, 992,
+                 992, 992, 992, 1136, 996, 992,
+                 1016.25]
+
+    maxPulses = [1990, 1745.5, 2000, 1931.25, 2000, 1706.25,
+                 1600, 2000, 2000, 1792, 2000, 1701.5,
+                 1907]
 
 
     # COMPUTED WHILE RUNNING
@@ -77,8 +88,12 @@ class ZenoArms:
     # this is overwritten in init
     # it will be multiplied against the [-1.0, 1.0 range to get the value in radians that positions needs to be passed
     rangeRads = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-             0.0]
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                 0.0]
+
+    rangePulses = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   0.0]
 
     # this is overwritten in init
     # it will be added to the radians computed with rangeRads if any offset is needed (if abs(minRads) != abs(maxRads)
@@ -116,6 +131,10 @@ class ZenoArms:
 
             #calculate the 'range' which I will later use
             self.rangeRads[i] = (self.maxRads[i] + self.minRads[i]) / 2.0
+
+            #calculate the range for the pulses as well, in case we need them.
+            #this should allow us to cast [-1.0, 1.0] values to pulses more easily
+            self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
 
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
