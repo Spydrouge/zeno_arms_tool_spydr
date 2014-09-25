@@ -41,7 +41,8 @@ class ZenoArms:
     # Corrections:
     #       Corrections should be easy to make using the adjustDir array, featured below. This will quickly flip the
     #       radians values.
-
+    #       We are assuming from config.xlsx that 'outward' rotates elbows in, and palms up/out
+    #       and 'up' for the shoulder pitch means extended, and 'in' for the elbow means clenched
     #--------------------------------------
 
     # Will be filled with trajectories by the function's like 'define_wave'
@@ -54,19 +55,20 @@ class ZenoArms:
              'arm_LSR', 'arm_LSP', 'arm_LER', 'arm_LEP', 'arm_LHR', 'arm_LHP',
              'waist_R']
 
-    # NEED TO DO: Enter correct radian bounds for each of the above-listed motors
-    minRads = [-2.0, -2.0, -2.0, -2.0, -2.0, -2.0,
-               -2.0, -2.0, -2.0, -2.0, -2.0, -2.0,
-               -2.0]
+    # Entered correct radian bounds for each of the above-listed motors
+    minRads = [-0.8727, -0.6545, -0.7854, -0.523, -0.7854, -0.2618,
+               -0.8727, -0.6545, -0.7854, -0.523, -0.7854, -0.2618,
+               -0.8727]
 
-    maxRads = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
-               2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
-               2.0]
+    maxRads = [0.8727, 0.6545, 0.7854, 0.523, 0.7854, 0.2618,
+               0.8727, 0.6545, 0.7854, 0.523, 0.7854, 0.2618,
+               0.8727]
 
+    # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
-    adjustDir = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                       1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                       1.0]
+    adjustDir = [-1.0, 1.0, -1.0, -1.0, -1.0, -1.0,
+                 1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
+                 1.0]
 
 
 
