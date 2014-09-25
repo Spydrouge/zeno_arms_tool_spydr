@@ -10,7 +10,7 @@ from ros_pololu_servo.msg import *
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-class zenoArms:
+class ZenoArms:
 
     # NOTE ON IMPLEMENTATION
     # -------------------------------------
@@ -44,6 +44,8 @@ class zenoArms:
 
     #--------------------------------------
 
+    # Will be filled with trajectories by the function's like 'define_wave'
+    trajAnims = {}
 
     #NEED TO BE HAND-SET
     #---------------------
@@ -241,9 +243,12 @@ class zenoArms:
 
         self.new_points(traj, arm_poses, time_when)
 
+        # And now that we are done, add it to our animations
+        self.trajAnims['zeno_wave'] = traj)
+
 
 
 if __name__ == '__main__':
-    rospy.init_node('zenoArms')
+    rospy.init_node('ZenoArms')
     client = actionlib.SimpleActionClient('pololu_trajectory_action_server', pololu_trajectoryAction)
     client.wait_for_server()
