@@ -22,6 +22,9 @@ class zenoArms:
     # This is being done because we do not yet have real config files.
 
     # NOTE ON JOINT ORIENTATION
+    # I am using a human sense of joint orientation to make animating easier (ie: -1 means the same thing for each elbow
+    # In reality is more than likely that joints on opposite sides of the body are flipped/mirrored, so -1 on one side
+    # will be 1 on the other.
     #
     # Assumptions:
     #       Hinge (Pitch) Joints are max at fully clenched and min at fully extended
@@ -29,6 +32,11 @@ class zenoArms:
     #           - For the Shoulders: When the arms are lifted above the head
     #           - For the Elbows: Assume the arms are slack. max will rotate the hard tip of the elbow inward.
     #           - For the Wrists: Same orientation as the elbows. Palms will turn out/up.
+    #           - For the Waist: Right shoulder is forward, left shoulder is back
+    #
+    # Corrections:
+    #       Corrections should be easy to make using the adjustDir array, featured below. This will quickly flip the
+    #       radians values.
 
     #--------------------------------------
 
@@ -148,6 +156,15 @@ class zenoArms:
         for i in range (0, len(self.names)):
             traj.joint_names.append(self.names[i])
 
+
+        #another lovely helping variable that allows us to pass in the storeConst with the word 'same' when we want
+        #positions to stay the same
+        same = self.storeConst
+
+        #this variable will help us keep track of how much time has elapsed, so we don't accidentlaly put one trajectory
+        #behind another
+        time_when = 0.0
+
         # NEUTRAL POSE
         # ----------------------
         # Zeno should 'gently' assume a neutral position to wave from. This posture should have the arms dropped
@@ -165,13 +182,7 @@ class zenoArms:
                      0.5, 1.0, 0.0, -1.0, 0.5, 0.0,
                      0.0]
 
-        #this variable will help us keep track of how much time has elapsed, so we don't accidentlaly put one trajectory
-        #behind another
-        time_when = 0.5
-
-        #another lovely helping variable that allows us to pass in the storeConst with the word 'same' when we want
-        #positions to stay the same
-        same = self.storeConst
+        time_when += 0.5
 
         # and now of course call the function
         self.new_points(traj, arm_poses, time_when)
@@ -179,11 +190,18 @@ class zenoArms:
         # RAISE LEFT ARM
         # The only motors moving should be the shoulder wheel, the elbow, the wrist, the hand, and the waist
         # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
-        # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left
+        # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
         #-------------------------------
         arm_poses = [same, same, same, same, same,
-                     1.0, same, same, 1.0, -1.0, same
-                        ]
+                     1.0, same, same, 1.0, -1.0, same,
+                     -1.0]
+
+        time_when += 0.75
+
+        self.new_points(traj, arm_poses, time_when)
+
+        #
+
 
 
 
