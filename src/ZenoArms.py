@@ -99,7 +99,6 @@ class ZenoArms:
                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                  0.0]
 
-
     # this is overwritten in init
     # it will be added to the radians computed with rangeRads if any offset is needed (if abs(minRads) != abs(maxRads)
     offsetRads = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -143,13 +142,18 @@ class ZenoArms:
             #this should allow us to cast [-1.0, 1.0] values to pulses more easily
             #self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
 
+        print("ZenoArms Attempting to define wave")
 
         #call definition functions
         self.define_wave()
 
+        print("ZenoArms Attempting to create client")
+
        #more ros setup
         self.client = actionlib.SimpleActionClient('pololu_trajectory_action_server', pololu_trajectoryAction)
         self.client.wait_for_server()
+
+        print("ZenoArms Attempting to subscribe")
 
         #subscribe to listen on the topic of when zeno needs animations for his arms
         rospy.Subscriber("zeno_pololu_animation", String, self.callback)
@@ -167,7 +171,7 @@ class ZenoArms:
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
 
-        print("Listing radian amounts so they can be compared with what the PololuController, etc. reports")
+        print("Listing radian amounts for a position so they can be compared with what the PololuController, etc. reports")
         # iterate through all of the motors
         for i in range(0, len(positions)):
 
@@ -191,6 +195,7 @@ class ZenoArms:
 
             #NEED TO DO: This is a placeholder; actual velocities should be computed later
             pts.velocities.append(0.05)
+
 
     def new_points(self, traj, positions, begin_point):
         # initialize the point
