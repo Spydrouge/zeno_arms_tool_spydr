@@ -14,6 +14,8 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 class ZenoArms:
 
+    piDivTwo = 1.57079632679
+
     # NOTE ON IMPLEMENTATION
     # -------------------------------------
     # I use 'position' values are mapped from [-1.0, 1.0] values inclusive. These assume that there exists a function
@@ -58,18 +60,18 @@ class ZenoArms:
     #         'waist_R']
 
     #the names I am now using, relative to the config file I was given
-    names = ['r_shoulder_roll_joint', 'r_shoulder_pitch_joint', 'r_elbow_roll_joint', 'r_elbow_pitch_joint', 'r_wrist_roll_joint', 'r_hand_grasp',
-             'l_shoulder_roll_joint', 'l_shoulder_pitch_joint', 'l_elbow_roll_joint', 'l_elbow_pitch_joint', 'l_wrist_roll_joint', 'l_hand_grasp',
+    names = ['r_shoulder_roll_joint', 'r_shoulder_pitch_joint', 'r_elbow_roll_joint', 'r_elbow_pitch_joint', 'r_wrist_roll_joint', 'right_hand_grasp',
+             'l_shoulder_roll_joint', 'l_shoulder_pitch_joint', 'l_elbow_roll_joint', 'l_elbow_pitch_joint', 'l_wrist_roll_joint', 'left_hand_grasp',
              'torso_joint']
 
     # Entered correct radian bounds for each of the above-listed motors
     minRads = [-1.7453278, -1.3089958, -0.5209888, -0.2498936, -1.4636599, -0.1524795,
-               -0.1692518, 0.0000000, -1.1422547, -0.9961139, -0.4146023, -0.3645632,
-               -1.0536627]
+               -0.1692518, 0.0000000, -1.1422547, -0.132994, -1.474978, -0.3645632,
+               -0.938987]
 
     maxRads = [0.0000000, 0.00000000, 1.0498062, 0.7973030, 0.1071351, .3711189,
-               1.5760760, 1.3089958, 0.4285403, 0.0510828, 1.1561927, 0.1590352,
-               0.6916651]
+               1.5760760, 1.3089958, 0.4285403, 0.425162, 0.108385, 0.1590352,
+               0.616101]
 
     # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
@@ -162,6 +164,7 @@ class ZenoArms:
         print ("ZenoArms.callback ran")
         if msg.data in self.trajAnims:
             print(" and found trajAnims correctly.")
+	
             goal = pololu_trajectoryGoal()
             goal.joint_trajectory = self.trajAnims[msg.data]
             self.client.send_goal(goal)
@@ -184,7 +187,8 @@ class ZenoArms:
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
             # range, and offset it by the correct amount
             else:
-                final_rad = (self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i]
+		final_rad = (positions[i] * piDivTwo)
+                #final_rad = (self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i]
                 pts.positions.append(final_rad)
 
                 print("ZenoArms will attempt to get motor " + self.names[i] + " to " + str(final_rad) + " radians.")
@@ -194,7 +198,7 @@ class ZenoArms:
                 self.storePos[i] = positions[i]
 
             #NEED TO DO: This is a placeholder; actual velocities should be computed later
-            pts.velocities.append(0.05)
+            pts.velocities.append(0.1)
 
 
     def new_points(self, traj, positions, begin_point):
@@ -266,9 +270,9 @@ class ZenoArms:
             # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
             # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
             #-------------------------------
-            arm_poses = [1.0, 1.0, same, 1.0, -0.75, -1.0,
-                         same, same, same, same, same,
-                         same]
+            arm_poses = [same, same, same, same, same,
+			1.0, 1.0, same, 1.0, -0.75, -1.0,                         
+                        same]
                          #-0.25]
 
             time_when += 1.5 + sloppy_values[0]
@@ -285,8 +289,8 @@ class ZenoArms:
             s_wri = sloppy_values[2] - 0.25
             s_elb = sloppy_values[3] * 2 - 0.5
 
-            arm_poses = [same, s_piv , same, s_elb, s_wri, same,
-                         same, same, same, same, same,
+            arm_poses = [same, same, same, same, same,
+			same, s_piv , same, s_elb, s_wri, same,
                          same]
                          #-s_wri]
 

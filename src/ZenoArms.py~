@@ -14,6 +14,8 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 
 class ZenoArms:
 
+    piDivTwo = 1.57079632679
+
     # NOTE ON IMPLEMENTATION
     # -------------------------------------
     # I use 'position' values are mapped from [-1.0, 1.0] values inclusive. These assume that there exists a function
@@ -58,23 +60,23 @@ class ZenoArms:
     #         'waist_R']
 
     #the names I am now using, relative to the config file I was given
-    names = ['r_shoulder_roll_joint', 'r_shoulder_pitch_joint', 'r_elbow_roll_joint', 'r_elbow_pitch_joint', 'r_wrist_roll_joint', 'r_hand_grasp',
-             'l_shoulder_roll_joint', 'l_shoulder_pitch_joint', 'l_elbow_roll_joint', 'l_elbow_pitch_joint', 'l_wrist_roll_joint', 'l_hand_grasp',
+    names = ['r_shoulder_roll_joint', 'r_shoulder_pitch_joint', 'r_elbow_roll_joint', 'r_elbow_pitch_joint', 'r_wrist_roll_joint', 'right_hand_grasp',
+             'l_shoulder_roll_joint', 'l_shoulder_pitch_joint', 'l_elbow_roll_joint', 'l_elbow_pitch_joint', 'l_wrist_roll_joint', 'left_hand_grasp',
              'torso_joint']
 
     # Entered correct radian bounds for each of the above-listed motors
-    minRads = [-0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
-               -0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
-               -0.872]
+    minRads = [-1.7453278, -1.3089958, -0.5209888, -0.2498936, -1.4636599, -0.1524795,
+               -0.1692518, 0.0000000, -1.1422547, -0.132994, -1.474978, -0.3645632,
+               -0.938987]
 
-    maxRads = [0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
-               0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
-               0.872]
+    maxRads = [0.0000000, 0.00000000, 1.0498062, 0.7973030, 0.1071351, .3711189,
+               1.5760760, 1.3089958, 0.4285403, 0.425162, 0.108385, 0.1590352,
+               0.616101]
 
     # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
-    adjustDir = [-1.0, 1.0, -1.0, -1.0, -1.0, -1.0,
-                 1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
+    adjustDir = [-1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+                 1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
                  1.0]
 
     #These are in the config file and we currently do not need them
@@ -98,10 +100,6 @@ class ZenoArms:
     rangeRads = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                  0.0]
-
-    rangePulses = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                   0.0]
 
     # this is overwritten in init
     # it will be added to the radians computed with rangeRads if any offset is needed (if abs(minRads) != abs(maxRads)
@@ -133,12 +131,11 @@ class ZenoArms:
 
             #NEED TO DO: Any additional initializations using proper config files, motor numbers, etc?
 
-            print("minRad: " + str(self.minRads[i]))
-            print("maxRad: " + str(self.maxRads[i]))
+            print("ZenoArms believes for motor " + self.names[i] + ", minRad: " + str(self.minRads[i]) + " & maxRad: " + str(self.maxRads[i]))
 
             #calculate the offset (if for some strange reason abs(maxrads) and abs(minRads) are not equal,
             ## I want to account for it
-            self.offsetRads[i] = self.maxRads[i] - self.minRads[i]
+            self.offsetRads[i] = self.minRads[i]
 
             #calculate the 'range' which I will later use
             self.rangeRads[i] = (self.maxRads[i] + self.minRads[i]) / 2.0
@@ -147,13 +144,19 @@ class ZenoArms:
             #this should allow us to cast [-1.0, 1.0] values to pulses more easily
             #self.rangePulses[i] = self.maxPulses[i] - self.minPulses[i]
 
+        print("ZenoArms Attempting to define wave")
 
         #call definition functions
         self.define_wave()
 
+        print("ZenoArms Attempting to create client")
+
        #more ros setup
         self.client = actionlib.SimpleActionClient('pololu_trajectory_action_server', pololu_trajectoryAction)
         self.client.wait_for_server()
+	self.pub=rospy.Publisher(
+
+        print("ZenoArms Attempting to subscribe")
 
         #subscribe to listen on the topic of when zeno needs animations for his arms
         rospy.Subscriber("zeno_pololu_animation", String, self.callback)
@@ -162,6 +165,7 @@ class ZenoArms:
         print ("ZenoArms.callback ran")
         if msg.data in self.trajAnims:
             print(" and found trajAnims correctly.")
+	
             goal = pololu_trajectoryGoal()
             goal.joint_trajectory = self.trajAnims[msg.data]
             self.client.send_goal(goal)
@@ -171,6 +175,7 @@ class ZenoArms:
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
 
+        print("Listing radian amounts for a position so they can be compared with what the PololuController, etc. reports")
         # iterate through all of the motors
         for i in range(0, len(positions)):
 
@@ -183,14 +188,19 @@ class ZenoArms:
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
             # range, and offset it by the correct amount
             else:
-                pts.positions.append(self.rangeRads[i] * positions[i] * self.adjustDir[i] + self.offsetRads[i])
+		final_rad = (positions[i] * piDivTwo)
+                #final_rad = (self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i]
+                pts.positions.append(final_rad)
+
+                print("ZenoArms will attempt to get motor " + self.names[i] + " to " + str(final_rad) + " radians.")
 
                 # do not update the storePos array UNLESS we actually have a pos (heavens forbid we throw in a value
                 # like "12.0"...
                 self.storePos[i] = positions[i]
 
             #NEED TO DO: This is a placeholder; actual velocities should be computed later
-            pts.velocities.append(0.5)
+            pts.velocities.append(0.1)
+
 
     def new_points(self, traj, positions, begin_point):
         # initialize the point
@@ -262,8 +272,9 @@ class ZenoArms:
             # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
             #-------------------------------
             arm_poses = [same, same, same, same, same,
-                         1.0, 1.0, same, 1.0, -0.75, -1.0,
-                         -0.25]
+			1.0, 1.0, same, 1.0, -0.75, -1.0,                         
+                        same]
+                         #-0.25]
 
             time_when += 1.5 + sloppy_values[0]
 
@@ -280,8 +291,9 @@ class ZenoArms:
             s_elb = sloppy_values[3] * 2 - 0.5
 
             arm_poses = [same, same, same, same, same,
-                         same, s_piv , same, s_elb, s_wri, same,
-                         -s_wri]
+			same, s_piv , same, s_elb, s_wri, same,
+                         same]
+                         #-s_wri]
 
             time_when += 1.5 + sloppy_values[1]
 
