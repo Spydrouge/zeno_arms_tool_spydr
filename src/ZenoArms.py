@@ -99,9 +99,6 @@ class ZenoArms:
                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                  0.0]
 
-    rangePulses = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                   0.0]
 
     # this is overwritten in init
     # it will be added to the radians computed with rangeRads if any offset is needed (if abs(minRads) != abs(maxRads)
@@ -133,8 +130,7 @@ class ZenoArms:
 
             #NEED TO DO: Any additional initializations using proper config files, motor numbers, etc?
 
-            print("minRad: " + str(self.minRads[i]))
-            print("maxRad: " + str(self.maxRads[i]))
+            print("ZenoArms believes for motor " + self.names[i] + ", minRad: " + str(self.minRads[i]) + " & maxRad: " + str(self.maxRads[i]))
 
             #calculate the offset (if for some strange reason abs(maxrads) and abs(minRads) are not equal,
             ## I want to account for it
@@ -171,6 +167,7 @@ class ZenoArms:
     # takes in itself, the point list, and the positions for each of len(self.names) amount of motors
     def map_motors(self, pts, positions):
 
+        print("Listing radian amounts so they can be compared with what the PololuController, etc. reports")
         # iterate through all of the motors
         for i in range(0, len(positions)):
 
@@ -183,14 +180,17 @@ class ZenoArms:
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
             # range, and offset it by the correct amount
             else:
-                pts.positions.append((self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i])
+                final_rad = (self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i]
+                pts.positions.append(final_rad)
+
+                print("ZenoArms will attempt to get motor " + self.names[i] + " to " + str(final_rad) + " radians.")
 
                 # do not update the storePos array UNLESS we actually have a pos (heavens forbid we throw in a value
                 # like "12.0"...
                 self.storePos[i] = positions[i]
 
             #NEED TO DO: This is a placeholder; actual velocities should be computed later
-            pts.velocities.append(0.5)
+            pts.velocities.append(0.05)
 
     def new_points(self, traj, positions, begin_point):
         # initialize the point
