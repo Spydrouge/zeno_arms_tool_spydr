@@ -63,13 +63,13 @@ class ZenoArms:
              'torso_joint']
 
     # Entered correct radian bounds for each of the above-listed motors
-    minRads = [-0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
-               -0.872, -0.654, -0.785, -0.523, -0.785, -0.261,
-               -0.872]
+    minRads = [-1.7453278, -1.3089958, -0.5209888, -0.2498936, -1.4636599, -0.1524795,
+               -0.1692518, 0.0000000, -1.1422547, -0.9961139, -0.4146023, -0.3645632,
+               -1.0536627]
 
-    maxRads = [0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
-               0.872, 0.654, 0.785, 0.523, 0.785, 0.261,
-               0.872]
+    maxRads = [0.0000000, 0.00000000, 1.0498062, 0.7973030, 0.1071351, .3711189,
+               1.5760760, 1.3089958, 0.4285403, 0.0510828, 1.1561927, 0.1590352,
+               0.6916651]
 
     # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
@@ -183,7 +183,7 @@ class ZenoArms:
             # otherwise flip the direction of the [-1.0, 1.0] value if necessary, transform it into the radians
             # range, and offset it by the correct amount
             else:
-                pts.positions.append(self.rangeRads[i] * positions[i] * self.adjustDir[i] + self.offsetRads[i])
+                pts.positions.append((self.rangeRads[i] * positions[i]) * self.adjustDir[i] + self.offsetRads[i])
 
                 # do not update the storePos array UNLESS we actually have a pos (heavens forbid we throw in a value
                 # like "12.0"...
