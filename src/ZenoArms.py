@@ -73,8 +73,8 @@ class ZenoArms:
 
     # NEED TO DO: make sure this is calibrated
     # for quick directional adjustments outside of the config file, if necessary
-    adjustDir = [-1.0, 1.0, -1.0, -1.0, -1.0, -1.0,
-                 1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
+    adjustDir = [-1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+                 1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
                  1.0]
 
     #These are in the config file and we currently do not need them
@@ -261,9 +261,10 @@ class ZenoArms:
             # Zeno raises the shoulder to max, clenches the elbow to max, rotates the wrist to face the hand out (min),
             # extends the fingers to the best of his ability (min), and attempts to rotate the waist so the left shoulder face forward
             #-------------------------------
-            arm_poses = [same, same, same, same, same,
-                         1.0, 1.0, same, 1.0, -0.75, -1.0,
-                         -0.25]
+            arm_poses = [1.0, 1.0, same, 1.0, -0.75, -1.0,
+                         same, same, same, same, same,
+                         same]
+                         #-0.25]
 
             time_when += 1.5 + sloppy_values[0]
 
@@ -279,9 +280,10 @@ class ZenoArms:
             s_wri = sloppy_values[2] - 0.25
             s_elb = sloppy_values[3] * 2 - 0.5
 
-            arm_poses = [same, same, same, same, same,
-                         same, s_piv , same, s_elb, s_wri, same,
-                         -s_wri]
+            arm_poses = [same, s_piv , same, s_elb, s_wri, same,
+                         same, same, same, same, same,
+                         same]
+                         #-s_wri]
 
             time_when += 1.5 + sloppy_values[1]
 
